@@ -1,0 +1,73 @@
+Customer ID	Customer Name	Date of Birth	Age	Mobile Number	Email ID	Aadhaar Number	PAN Number	Address	Employment Type	Company Name	Job Designation	Total Monthly Income (₹)	CIBIL Score	Credit Risk Category	Existing Loans Count	Existing EMI Amount (₹)	Vehicle ID	Vehicle Details (Brand, Model, Variant, Year)	Vehicle Registration Number	Loan ID	Loan Amount (₹)	Loan Sanction Date	Down Payment (₹)	Interest Rate (%)	Loan Tenure (Months)	EMI Amount (₹)	First EMI Date	Last EMI Date	Outstanding Principal (₹)	Outstanding Interest (₹)	Days Past Due	Missed EMI Count	Loan Status
+CUST1001	Rahul Sharma	15-03-1992	33	9876543210	rahul.sharma92@gmail.com	4567 1234 9876	BQWPS4721K	Whitefield, Bengaluru	Salaried	Infosys Ltd	Senior Software Engineer	95000	785	Low	1	12500	VEH2001	Hyundai Creta SX(O) Diesel AT, 2024	KA03MX4587	LN5001	1450000	15-06-2024	350000	9.25	60	30280	15-07-2024	15-06-2029	1182450	124600	0	0	Active
+CUST1002	Priya Nair	28-08-1995	30	9845012345	priya.nair@gmail.com	7854 9632 1478	AGHPN6321J	Electronic City, Bengaluru	Salaried	TCS	Systems Analyst	72000	742	Low	2	15800	VEH2002	Tata Nexon Fearless Plus DCA Petrol, 2024	KA51NV7312	LN5002	1120000	10-09-2024	200000	9.75	60	23610	10-10-2024	10-09-2029	998300	96200	34	1	Delinquent
+CUST1003	Suresh Kumar	11-01-1988	38	9962331144	suresh.kumar88@yahoo.com	6325 8741 9632	CHLPK8123R	Anna Nagar, Chennai	Self-Employed	Kumar Electricals	Proprietor	58000	664	Medium	3	22300	VEH2003	Mahindra Scorpio N Z8 Diesel MT, 2023	TN09DF9087	LN5003	1680000	20-03-2023	420000	10.5	72	31450	20-04-2023	20-03-2029	1342180	218950	76	3	Default
+CUST1004	Anitha Reddy	05-07-1990	35	9908123456	anitha.reddy@gmail.com	9517 8642 7531	DJKPR3482L	Gachibowli, Hyderabad	Salaried	Accenture	Team Lead	115000	812	Low	1	18000	VEH2004	Kia Seltos GTX Plus DCT Petrol, 2025	TS07HT4421	LN5004	1590000	05-01-2025	410000	8.9	60	32950	05-02-2025	05-01-2030	1476120	108500	12	1	Delinquent
+CUST1005	Mohammed Arif	19-11-1985	40	9886011223	arif.mohammed@gmail.com	8745 2196 4587	EKMPA5421T	HSR Layout, Bengaluru	Self-Employed	Arif Logistics	Owner	48000	612	High	4	28400	VEH2005	Maruti Suzuki Brezza ZXi AT, 2023	KA05PC2189	LN5005	980000	18-02-2023	180000	11.25	60	21450	18-03-2023	18-02-2028	794850	143900	128	5	Default
+
+
+
+
+
+
+Field	Value
+Customer ID	CUST1001
+Customer Name	Rahul Sharma
+Date of Birth	15-03-1992
+Age	33
+Mobile Number	9876543210
+Email ID	rahul.sharma92@gmail.com
+Aadhaar Number	4567 1234 9876
+PAN Number	BQWPS4721K
+Residential Address	Whitefield, Bengaluru
+Employment Type	Salaried
+Company Name	Infosys Ltd
+Job Designation	Senior Software Engineer
+Monthly Income (₹)	95000
+Vehicle ID	VEH2001
+Vehicle	Hyundai Creta SX(O) Diesel AT
+Manufacturing Year	2024
+Registration Number	KA03MX4587
+Loan ID	LN5001
+Loan Amount (₹)	1450000
+Loan Sanction Date	15-06-2024
+Down Payment (₹)	350000
+Interest Rate (%)	9.25
+Loan Tenure (Months)	60
+Monthly EMI (₹)	30280
+First EMI Date	15-07-2024
+Last EMI Date	15-06-2029
+EMIs Paid	20
+EMIs Remaining	40
+EMIs Skipped	0
+Late Payment Charges (₹)	0
+Penalty Interest (₹)	0
+Outstanding Principal (₹)	1182450
+Outstanding Interest (₹)	124600
+Loan Status	Active
+
+
+
+
+
+Installment No	Due Date	Paid Date	EMI Amount (₹)	Principal (₹)	Interest (₹)	Late Fee (₹)	Status
+1	15-07-2024	15-07-2024	30280	18500	11780	0	Paid
+2	15-08-2024	15-08-2024	30280	18500	11780	0	Paid
+3	15-09-2024	15-09-2024	30280	18500	11780	0	Paid
+4	15-10-2024	15-10-2024	30280	18500	11780	0	Paid
+5	15-11-2024	15-11-2024	30280	18500	11780	0	Paid
+6	15-12-2024	15-12-2024	30280	18500	11780	0	Paid
+7	15-01-2025	15-01-2025	30280	18500	11780	0	Paid
+8	15-02-2025	15-02-2025	30280	18500	11780	0	Paid
+9	15-03-2025	15-03-2025	30280	18500	11780	0	Paid
+10	15-04-2025	15-04-2025	30280	18500	11780	0	Paid
+11	15-05-2025	15-05-2025	30280	18500	11780	0	Paid
+12	15-06-2025	15-06-2025	30280	18500	11780	0	Paid
+13	15-07-2025	15-07-2025	30280	18500	11780	0	Paid
+14	15-08-2025	15-08-2025	30280	18500	11780	0	Paid
+15	15-09-2025	15-09-2025	30280	18500	11780	0	Paid
+16	15-10-2025	15-10-2025	30280	18500	11780	0	Paid
+17	15-11-2025	15-11-2025	30280	18500	11780	0	Paid
+18	15-12-2025	15-12-2025	30280	18500	11780	0	Paid
+19	15-01-2026	15-01-2026	30280	18500	11780	0	Paid
+20	15-02-2026	15-02-2026	30280	18500	11780	0	Paid
