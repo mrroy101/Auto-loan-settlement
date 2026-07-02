@@ -1,67 +1,65 @@
 """
-Vehicle valuation service.
- 
-Provides a simple depreciation-based valuation.
-Can later be replaced with an external API.
+Settlement calculation service.
 """
  
 from dataclasses import dataclass
-from datetime import datetime
  
  
 @dataclass
-class VehicleValuation:
-    market_value: float
-    dealer_value: float
-    auction_value: float
+class SettlementRecommendation:
+    total_outstanding: float
+    les: float
+    mid: float
+    hes: float
  
  
-class VehicleService:
-    """Calculates estimated vehicle values."""
+class SettlementService:
+    """Business rules for settlement calculations."""
  
     @staticmethod
-    def estimate_value(
-        brand: str,
-        model: str,
-        variant: str,
-        manufacturing_year: int,
-        original_price: float,
-    ) -> VehicleValuation:
+    def calculate(
+        outstanding_principal: float,
+        outstanding_interest: float,
+        auction_value: float,
+    ) -> SettlementRecommendation:
         """
-        Estimate vehicle valuation using depreciation.
+        Calculate settlement recommendation.
  
         Args:
-            brand: Vehicle brand
-            model: Vehicle model
-            variant: Vehicle variant
-            manufacturing_year: Manufacturing year
-            original_price: Original ex-showroom/on-road price
+            outstanding_principal: Remaining principal
+            outstanding_interest: Outstanding interest
+            auction_value: Estimated auction value of vehicle
  
         Returns:
-            VehicleValuation
+            SettlementRecommendation
         """
  
-        current_year = datetime.now().year
- 
-        age = max(0, current_year - manufacturing_year)
- 
-        if age == 0:
-            depreciation = 0.10
-        elif age == 1:
-            depreciation = 0.20
-        else:
-            depreciation = 0.20 + ((age - 1) * 0.10)
- 
-        depreciation = min(depreciation, 0.80)
- 
-        market_value = original_price * (1 - depreciation)
- 
-        dealer_value = market_value * 0.95
- 
-        auction_value = market_value * 0.85
- 
-        return VehicleValuation(
-            market_value=round(market_value, 2),
-            dealer_value=round(dealer_value, 2),
-            auction_value=round(auction_value, 2),
+        total_outstanding = (
+            outstanding_principal +
+            outstanding_interest
         )
+ 
+        les = max(
+            total_outstanding * 0.70,
+            auction_value,
+        )
+ 
+        mid = total_outstanding * 0.85
+ 
+        hes = total_outstanding * 0.95
+ 
+        # Maintain order
+        mid = max(mid, les)
+        hes = max(hes, mid)
+ 
+        return SettlementRecommendation(
+            total_outstanding=round(total_outstanding, 2),
+            les=round(les, 2),
+            mid=round(mid, 2),
+            hes=round(hes, 2),
+        )
+ 
+ 
+# Singleton instance
+settlement_service = SettlementService()
+ 
