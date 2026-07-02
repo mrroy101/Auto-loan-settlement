@@ -1,65 +1,306 @@
 """
-Settlement calculation service.
+Agent Team
+ 
+Coordinates all services and AutoGen agents.
+ 
+Streamlit should only interact with this class.
 """
  
-from dataclasses import dataclass
+import re
+ 
+from agents.analysis_agent import analysis_agent
+from agents.approval_agent import approval_agent
+ 
+from services.excel_service import excel_service
+from services.vehicle_service import VehicleService
+from services.settlement_service import settlement_service
  
  
-@dataclass
-class SettlementRecommendation:
-    total_outstanding: float
-    les: float
-    mid: float
-    hes: float
+class AgentTeam:
+    """Coordinates the Analysis and Approval agents."""
  
+    def __init__(self):
+        self.customer = None
+        self.emi_history = None
+        self.vehicle = None
+        self.settlement = None
+        self.chat_history = []
+        self.negotiation_round = 0
+        self.latest_offer = None
+        self.max_rounds = 6
+        self.negotiation_completed = False
+        self.conversation_active = True
  
-class SettlementService:
-    """Business rules for settlement calculations."""
+    def load_customer(self, customer_id: str):
+        """
+        Load customer data, estimate vehicle value,
+        calculate settlement values and perform initial analysis.
+        """
+    
+        # Reset negotiation state
+        self.chat_history = []
+        self.negotiation_round = 0
+        self.latest_offer = None
+        self.negotiation_complete = False
+    
+        # Load customer profile and EMI history
+        self.customer, self.emi_history = excel_service.load_customer_data(customer_id)
+    
+        # -------------------------------
+        # Vehicle Details
+        # -------------------------------
+        vehicle_name = self.customer["Vehicle"]
+    
+        parts = vehicle_name.split()
+    
+        brand = parts[0]
+        model = parts[1]
+        variant = " ".join(parts[2:])
+    
+        self.vehicle = VehicleService.estimate_value(
+            brand=brand,
+            model=model,
+            variant=variant,
+            manufacturing_year=int(self.customer["Manufacturing Year"]),
+            original_price=float(
+                self.customer.get("Original Vehicle Price (₹)", 0)
+            ),
+        )
+    
+        # -------------------------------
+        # Settlement Calculation
+        # -------------------------------
+        self.settlement = settlement_service.calculate(
+            outstanding_principal=float(
+                self.customer.get("Outstanding Principal (₹)", 0)
+            ),
+            outstanding_interest=float(
+                self.customer.get("Outstanding Interest (₹)", 0)
+            ),
+            auction_value=self.vehicle.auction_value,
+        )
+    
+        # -------------------------------
+        # Initial AI Analysis
+        # -------------------------------
+        analysis = analysis_agent.analyse_customer(
+            self.customer,
+            self.emi_history,
+            self.vehicle,
+            self.settlement,
+        )
+    
+        return {
+            "customer": self.customer,
+            "emi_history": self.emi_history,
+            "vehicle": self.vehicle,
+            "settlement": self.settlement,
+            "analysis": analysis,
+        }
+
+ 
+    def extract_amount(self, message: str):
+        """
+        Extract settlement offer amount from customer message.
+        Supports formats like:
+        880000
+        8.8 lakh
+        8 lakh
+        ₹8,80,000
+        """
+    
+        message = message.lower().replace(",", "")
+    
+        # Match "8.8 lakh" or "8 lakh"
+        match = re.search(r'(\d+(\.\d+)?)\s*lakh', message)
+        if match:
+            return float(match.group(1)) * 100000
+    
+        # Match plain numbers (e.g. 880000)
+        match = re.search(r'(\d{5,8})', message)
+        if match:
+            return float(match.group(1))
+    
+        return None
+    
+    def customer_has_accepted(self, message: str):
+ 
+        message = message.lower()
+    
+        accepted_phrases = [
+            "i agree",
+            "agreed",
+            "accepted",
+            "i accept",
+            "let's proceed",
+            "lets proceed",
+            "proceed",
+            "go ahead",
+            "okay",
+            "ok",
+            "fine",
+            "deal",
+            "that's acceptable",
+            "that is acceptable"
+        ]
+    
+        return any(phrase in message for phrase in accepted_phrases)
+    
+    
+    def detect_customer_intent(self, message: str):
+ 
+        msg = message.lower()
+    
+        if any(x in msg for x in [
+            "lost my job",
+            "job loss",
+            "laid off",
+            "unemployed"
+        ]):
+            return "financial_hardship"
+    
+        if any(x in msg for x in [
+            "medical",
+            "hospital",
+            "accident",
+            "treatment"
+        ]):
+            return "medical"
+    
+        if any(x in msg for x in [
+            "final offer",
+            "last offer",
+            "take it",
+            "maximum i can pay"
+        ]):
+            return "final_offer"
+    
+        if any(x in msg for x in [
+            "can't",
+            "cannot",
+            "not possible",
+            "too much",
+            "high"
+        ]):
+            return "counter_offer"
+    
+        return "general"
+ 
+    def process_customer_message(
+        self,
+        customer_message: str,
+    ):
+        """
+        Process customer negotiation message.
+ 
+        If an offer amount is detected,
+        automatically evaluate it.
+        """
+        self.negotiation_round += 1
+        intent = self.detect_customer_intent(customer_message)
+
+        self.chat_history.append(
+            {"role": "user", "content": customer_message}
+        )
+ 
+        conversation_history = "\n".join(
+            [f"{m['role']}: {m['content']}" for m in self.chat_history]
+        )
+        
+        reply = analysis_agent.negotiate(
+            customer_message=customer_message,
+            settlement=self.settlement,
+            history=conversation_history,
+            intent=intent
+        )
+
+        self.chat_history.append(
+            {"role": "assistant", "content": reply}
+        )
+ 
+        amount = self.extract_amount(customer_message)
+        customer_accepted = self.customer_has_accepted(customer_message)
+ 
+        # If no offer is found, simply continue the conversation
+        if amount is None:
+        
+            return {
+                "reply": reply,
+                "approval": None,
+                "pdf": None,
+                "offer": None,
+                "negotiation_complete": False
+            }
+        
+        # Store the latest offer
+        self.latest_offer = amount
+        
+        # Continue negotiating until 6 rounds
+        if (
+            self.negotiation_round < self.max_rounds 
+            and not customer_accepted
+        ):
+        
+            return {
+                "reply": reply,
+                "approval": None,
+                "pdf": None,
+                "offer": amount,
+                "negotiation_complete": False
+            }
+        
+        # After the final round, evaluate the offer
+        status, pdf = approval_agent.evaluate_offer(
+            customer_name=self.customer["Customer Name"],
+            customer_id=self.customer["Customer ID"],
+            offer_amount=self.latest_offer,
+            settlement=self.settlement,
+        )
+        
+        return {
+            "reply": reply,
+            "approval": status,
+            "pdf": pdf,
+            "offer": self.latest_offer,
+            "negotiation_complete": True
+        }
  
     @staticmethod
-    def calculate(
-        outstanding_principal: float,
-        outstanding_interest: float,
-        auction_value: float,
-    ) -> SettlementRecommendation:
+    def _extract_amount(text: str):
         """
-        Calculate settlement recommendation.
+        Extract first numeric amount from message.
  
-        Args:
-            outstanding_principal: Remaining principal
-            outstanding_interest: Outstanding interest
-            auction_value: Estimated auction value of vehicle
+        Example:
  
-        Returns:
-            SettlementRecommendation
+        I can pay 850000
+ 
+        I can pay 8,50,000
+ 
+        I can pay 8.5 lakh
         """
  
-        total_outstanding = (
-            outstanding_principal +
-            outstanding_interest
+        lower = text.lower()
+ 
+        lakh = re.search(
+            r'(\d+(?:\.\d+)?)\s*lakh',
+            lower,
         )
  
-        les = max(
-            total_outstanding * 0.70,
-            auction_value,
+        if lakh:
+            return float(lakh.group(1)) * 100000
+ 
+        number = re.search(
+            r'([\d,]+)',
+            text,
         )
  
-        mid = total_outstanding * 0.85
+        if number:
+            return float(
+                number.group(1).replace(",", "")
+            )
  
-        hes = total_outstanding * 0.95
- 
-        # Maintain order
-        mid = max(mid, les)
-        hes = max(hes, mid)
- 
-        return SettlementRecommendation(
-            total_outstanding=round(total_outstanding, 2),
-            les=round(les, 2),
-            mid=round(mid, 2),
-            hes=round(hes, 2),
-        )
+        return None
  
  
-# Singleton instance
-settlement_service = SettlementService()
+agent_team = AgentTeam()
  
